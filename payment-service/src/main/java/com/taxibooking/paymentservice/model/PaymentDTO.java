@@ -1,4 +1,5 @@
-package com.taxibooking.bookingservice.model;
+package com.taxibooking.paymentservice.model;
+
 
 public record PaymentDTO(
         String bookingId,

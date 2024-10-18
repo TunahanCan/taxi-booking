@@ -1,6 +1,9 @@
 package com.taxibooking.bookingservice.service;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.taxibooking.bookingservice.enums.PaymentEnum;
+import com.taxibooking.bookingservice.model.BookingCancelledDTO;
 import com.taxibooking.bookingservice.model.BookingRequestDTO;
 import com.taxibooking.bookingservice.model.DriverDTO;
 import com.taxibooking.bookingservice.model.PaymentDTO;
@@ -12,18 +15,26 @@ import org.springframework.stereotype.Service;
 public class BookingOrchestratorService {
     private final KafkaTemplate<String, PaymentDTO> paymentKafkaTemplate;
     private final KafkaTemplate<String, DriverDTO> driverKafkaTemplate;
+    private final BookingKafkaService bookingKafkaService;
+
     public BookingOrchestratorService(KafkaTemplate<String, PaymentDTO> paymentKafkaTemplate,
-                                      KafkaTemplate<String, DriverDTO> driverKafkaTemplate) {
+                                      KafkaTemplate<String, DriverDTO> driverKafkaTemplate,
+                                      BookingKafkaService bookingKafkaService) {
         this.paymentKafkaTemplate = paymentKafkaTemplate;
         this.driverKafkaTemplate = driverKafkaTemplate;
+        this.bookingKafkaService = bookingKafkaService;
     }
-    @KafkaListener(topics = "booking-events", groupId = "booking-group", containerFactory = "bookingKafkaListenerContainerFactory")
+
+    @KafkaListener(topics = "booking-events", groupId = "booking-group",
+            containerFactory = "bookingKafkaListenerContainerFactory")
     public void handleBookingEvent(BookingRequestDTO bookingRequest) {
+
         System.out.println("Processing booking: " + bookingRequest.bookingId());
         PaymentDTO paymentDTO = new PaymentDTO(
                 bookingRequest.bookingId(),
                 bookingRequest.customerName(),
-                100.0, // Sabit bir ücret örneği
+                bookingRequest.amount(),
+                PaymentEnum.CASH_PAYMENT.name(),
                 false
         );
         paymentKafkaTemplate.send("payment-events", paymentDTO);
@@ -41,7 +52,14 @@ public class BookingOrchestratorService {
             );
             driverKafkaTemplate.send("driver-events", driverDTO);
         } else {
-            System.out.println("Payment failed for booking: " + paymentDTO.bookingId());
+            BookingCancelledDTO bookingCancelledDTO =
+                    new BookingCancelledDTO(paymentDTO.bookingId(),
+                            "test-name", false );
+            try {
+                bookingKafkaService.sendBookingCancelled(bookingCancelledDTO);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 

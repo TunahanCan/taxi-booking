@@ -2,8 +2,6 @@ package com.taxibooking.paymentservice.controller;
 
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.taxibooking.paymentservice.model.PaymentRequestDTO;
-import com.taxibooking.paymentservice.model.PaymentResponseDTO;
 import com.taxibooking.paymentservice.service.PaymentKafkaService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
