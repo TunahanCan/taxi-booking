@@ -16,7 +16,7 @@ public class PaymentContextService {
     private final CreditPayment creditCardPayment;
     private final CashPayment cashPayment;
 
-    public void processPayment(String paymentType, double amount) {
+    public String processPayment(String paymentType, double amount) {
         PaymentEnum paymentMethod;
         try {
             paymentMethod = PaymentEnum.valueOf(paymentType.toUpperCase());
@@ -28,6 +28,6 @@ public class PaymentContextService {
             case CREDIT_CARD -> creditCardPayment;
             case CASH_PAYMENT -> cashPayment;
         };
-        strategy.performPay(amount);
+        return strategy.performPay(amount);
     }
 }

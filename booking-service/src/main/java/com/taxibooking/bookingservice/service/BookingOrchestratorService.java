@@ -48,7 +48,7 @@ public class BookingOrchestratorService {
      * @param bookingRequest
      * @implNote this listener process the reletad booking request topic
      */
-    @KafkaListener(topics = "${booking.request.topic}", groupId = "booking-group",
+    @KafkaListener(topics = "${booking.request.topic}", groupId = "${spring.kafka.consumer.group-id}",
             containerFactory = "bookingKafkaListenerContainerFactory")
     public void handleBookingRequestEvent(BookingRequestDTO bookingRequest) {
         System.out.println("Processing booking: " + bookingRequest.bookingId());
@@ -63,14 +63,18 @@ public class BookingOrchestratorService {
     }
 
 
-    @KafkaListener(topics = "${booking.cancelled.topic}", groupId = "booking-group",
+    /**
+     * will be implemented rollback scenario
+     * @param bookingCancelledDTO
+     */
+    @KafkaListener(topics = "${booking.cancelled.topic}", groupId = "${spring.kafka.consumer.group-id}",
             containerFactory = "bookingKafkaListenerContainerFactory")
     public void handleBookingCancelledEvent(BookingCancelledDTO bookingCancelledDTO) {
         redisTemplate.opsForHash().put(bookingCancelledDTO.bookingId(), "booking-cancelled", bookingCancelledDTO);
     }
 
 
-    @KafkaListener(topics = "payment-events", groupId = "booking-group",
+    @KafkaListener(topics = "${payment.stage.topic}", groupId = "${spring.kafka.consumer.group-id}",
             containerFactory = "paymentKafkaListenerContainerFactory")
     public void handlePaymentEvent(PaymentStageDTO PaymentStageDTO) {
         if (PaymentStageDTO.paymentCompleted()) {
@@ -85,35 +89,32 @@ public class BookingOrchestratorService {
             BookingCancelledDTO bookingCancelledDTO =
                     new BookingCancelledDTO(PaymentStageDTO.bookingId(),
                             "test-name", false);
-            bookingOrchestrationProducerService.sendBookingCancelled(bookingCancelledDTO);
+            bookingOrchestrationProducerService.sendBookingCancelled(bookingCancelledDTO,"booking-cancelled");
         }
     }
 
-    @KafkaListener(topics = "driver-events", groupId = "booking-group",
+    @KafkaListener(topics = "driver-events", groupId = "${spring.kafka.consumer.group-id}",
             containerFactory = "driverKafkaListenerContainerFactory")
     public void handleDriverEvent(DriverStageDTO driverTriggerDTO) {
         if (driverTriggerDTO.driverAssigned()) {
             System.out.println("Booking completed successfully for: " + driverTriggerDTO.bookingId());
             redisTemplate.opsForHash().put(driverTriggerDTO.bookingId(), "driver-assigned", driverTriggerDTO);
         } else {
+            rollbackTransaction(driverTriggerDTO.bookingId(),"driver-is-not-assigned");
             System.out.println("Driver assignment failed for booking: " + driverTriggerDTO.bookingId());
         }
     }
 
-    // Geri alma (rollback) işlemini yönetir
     private void rollbackTransaction(String bookingId, String reason) {
         System.out.println("Rolling back transaction for booking: " + bookingId + " due to: " + reason);
         BookingRequestDTO bookingRequest = (BookingRequestDTO) redisTemplate.opsForList().leftPop(bookingId);
         if (bookingRequest != null) {
-            // Kafka üzerinden rezervasyon iptali mesajı gönder
             BookingCancelledDTO bookingCancelledDTO = new BookingCancelledDTO(
                     bookingId,
                     bookingRequest.customerName(),
-                    false // İptal durumu
+                    false
             );
             redisTemplate.delete(bookingId);
         }
     }
-
-
 }

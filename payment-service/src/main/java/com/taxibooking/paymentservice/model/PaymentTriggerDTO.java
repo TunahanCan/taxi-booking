@@ -1,10 +1,8 @@
 package com.taxibooking.paymentservice.model;
 
-
-public record PaymentStageDTO(
+public record PaymentTriggerDTO(
         String bookingId,
         String customerName,
         double amount,
-        String paymentStrategy,
-        boolean paymentCompleted
+        String paymentStrategy
 ) {}

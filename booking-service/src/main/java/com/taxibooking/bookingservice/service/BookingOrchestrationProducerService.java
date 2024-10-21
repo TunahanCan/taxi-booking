@@ -1,6 +1,5 @@
 package com.taxibooking.bookingservice.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.taxibooking.bookingservice.model.BookingCancelledDTO;
 import com.taxibooking.bookingservice.model.BookingRequestDTO;
 import com.taxibooking.bookingservice.model.DriverTriggerDTO;
@@ -32,30 +31,40 @@ public class BookingOrchestrationProducerService {
     @Value("${driver.trigger.topic}")
     private String driverTriggerTopic;
 
-    private final KafkaTemplate<String, BookingRequestDTO> bookingRequestDTOKafkaTemplate;
+    private final KafkaTemplate<String, BookingRequestDTO> bookingRequestKafkaTemplate;
     private final KafkaTemplate<String, BookingCancelledDTO> bookingCancelledKafkaTemplate;
     private final KafkaTemplate<String, PaymentTriggerDTO> paymentTriggerKafkaTemplate;
     private final KafkaTemplate<String, DriverTriggerDTO> driverTriggerKafkaTemplate;
 
-    public void sendBookingRequest(BookingRequestDTO bookingRequest) {
-        bookingRequestDTOKafkaTemplate.send(bookingRequestTopic, bookingRequest);
+    public void sendBookingRequest(BookingRequestDTO bookingRequest, String headerMessage) {
+        Message<BookingRequestDTO> message = MessageBuilder
+                .withPayload(bookingRequest)
+                .setHeader(KafkaHeaders.TOPIC, bookingRequestTopic)
+                .setHeader("booking-request-message", headerMessage)
+                .build();
+        bookingRequestKafkaTemplate.send(message);
     }
-    public void sendBookingCancelled(BookingCancelledDTO bookingCancelledDTO) {
-        bookingCancelledKafkaTemplate.send(bookingCancelledTopic, bookingCancelledDTO);
+    public void sendBookingCancelled(BookingCancelledDTO bookingCancelledDTO , String headerMessage) {
+        Message<BookingCancelledDTO> message = MessageBuilder
+                .withPayload(bookingCancelledDTO)
+                .setHeader(KafkaHeaders.TOPIC, bookingCancelledTopic)
+                .setHeader("booking-cancelled-message", headerMessage)
+                .build();
+        bookingCancelledKafkaTemplate.send(message);
     }
     public void sendPaymentTrigger(PaymentTriggerDTO paymentTriggerDTO, String headerMessage) {
         Message<PaymentTriggerDTO> message = MessageBuilder
                 .withPayload(paymentTriggerDTO)
-                .setHeader(KafkaHeaders.TOPIC, driverTriggerTopic)
-                .setHeader("payment-message", headerMessage) // Özel bir header ekliyoruz
+                .setHeader(KafkaHeaders.TOPIC, paymentTriggerTopic)
+                .setHeader("payment-trigger-message", headerMessage)
                 .build();
-        paymentTriggerKafkaTemplate.send(paymentTriggerTopic, paymentTriggerDTO);
+        paymentTriggerKafkaTemplate.send(message);
     }
     public void sendDriverTrigger(DriverTriggerDTO driverTriggerDTO, String headerMessage) {
         Message<DriverTriggerDTO> message = MessageBuilder
                 .withPayload(driverTriggerDTO)
                 .setHeader(KafkaHeaders.TOPIC, driverTriggerTopic)
-                .setHeader("driver-message", headerMessage) // Özel bir header ekliyoruz
+                .setHeader("driver-message", headerMessage)
                 .build();
         driverTriggerKafkaTemplate.send(message);
     }

@@ -1,8 +1,6 @@
 package com.taxibooking.bookingservice.configuration;
 
-import com.taxibooking.bookingservice.model.BookingRequestDTO;
-import com.taxibooking.bookingservice.model.DriverTriggerDTO;
-import com.taxibooking.bookingservice.model.PaymentStageDTO;
+import com.taxibooking.bookingservice.model.*;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -56,8 +54,13 @@ public class ConsumerKafkaConfig {
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, BookingRequestDTO> bookingKafkaListenerContainerFactory() {
+    public ConcurrentKafkaListenerContainerFactory<String, BookingRequestDTO> bookingRequestKafkaListenerContainerFactory() {
         return createListenerContainerFactory(BookingRequestDTO.class);
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, BookingCancelledDTO> bookingCancelledKafkaListenerContainerFactory() {
+        return createListenerContainerFactory(BookingCancelledDTO.class);
     }
 
     @Bean
@@ -66,7 +69,7 @@ public class ConsumerKafkaConfig {
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, DriverTriggerDTO> driverKafkaListenerContainerFactory() {
-        return createListenerContainerFactory(DriverTriggerDTO.class);
+    public ConcurrentKafkaListenerContainerFactory<String, DriverStageDTO> driverKafkaListenerContainerFactory() {
+        return createListenerContainerFactory(DriverStageDTO.class);
     }
 }
