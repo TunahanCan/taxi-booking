@@ -37,5 +37,10 @@ The system uses an **event-driven architecture** where different services commun
 - **Driver Service**: Assigns a driver to the booking.
 - **Orchestrator Service**: Coordinates the entire process.
 
-### High-level Architecture:
+## Features
+
+- **Event-Driven Orchestration**: Listens and sends messages between services to manage the booking process.
+- **Saga Pattern**: Ensures that in case of failure (like payment or driver unavailability), the process can be rolled back to maintain data consistency.
+- **Asynchronous Communication**: Uses Kafka for sending and receiving events between services, ensuring loose coupling and high scalability.
+
 
