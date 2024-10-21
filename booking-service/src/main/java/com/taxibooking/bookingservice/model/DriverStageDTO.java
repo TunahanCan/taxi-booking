@@ -1,9 +1,8 @@
 package com.taxibooking.bookingservice.model;
 
-
-public record DriverDTO(
+public record DriverStageDTO(
         String bookingId,
         String driverId,
-        String driverName,
-        boolean driverAssigned
-) {}
+        boolean driverAssigned,
+        String failureReason) {
+}

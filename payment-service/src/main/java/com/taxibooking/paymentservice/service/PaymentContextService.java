@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class PaymentContextService {
-
     private final BitcoinPayment bitcoinPayment;
     private final CreditPayment creditCardPayment;
     private final CashPayment cashPayment;
@@ -28,7 +27,6 @@ public class PaymentContextService {
             case BITCOIN -> bitcoinPayment;
             case CREDIT_CARD -> creditCardPayment;
             case CASH_PAYMENT -> cashPayment;
-            default -> throw new IllegalArgumentException("Unsupported payment method: " + paymentMethod);
         };
         strategy.performPay(amount);
     }

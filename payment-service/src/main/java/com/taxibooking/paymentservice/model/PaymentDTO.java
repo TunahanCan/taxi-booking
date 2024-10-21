@@ -1,7 +1,7 @@
 package com.taxibooking.paymentservice.model;
 
 
-public record PaymentDTO(
+public record PaymentStageDTO(
         String bookingId,
         String customerName,
         double amount,
