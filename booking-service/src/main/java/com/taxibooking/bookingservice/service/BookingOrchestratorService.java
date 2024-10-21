@@ -49,7 +49,7 @@ public class BookingOrchestratorService {
      * @implNote this listener process the reletad booking request topic
      */
     @KafkaListener(topics = "${booking.request.topic}", groupId = "${spring.kafka.consumer.group-id}",
-            containerFactory = "bookingKafkaListenerContainerFactory")
+            containerFactory = "bookingRequestKafkaListenerContainerFactory")
     public void handleBookingRequestEvent(BookingRequestDTO bookingRequest) {
         System.out.println("Processing booking: " + bookingRequest.bookingId());
         PaymentTriggerDTO paymentTriggerDTO = new PaymentTriggerDTO(
@@ -68,7 +68,7 @@ public class BookingOrchestratorService {
      * @param bookingCancelledDTO
      */
     @KafkaListener(topics = "${booking.cancelled.topic}", groupId = "${spring.kafka.consumer.group-id}",
-            containerFactory = "bookingKafkaListenerContainerFactory")
+            containerFactory = "bookingCancelledKafkaListenerContainerFactory")
     public void handleBookingCancelledEvent(BookingCancelledDTO bookingCancelledDTO) {
         redisTemplate.opsForHash().put(bookingCancelledDTO.bookingId(), "booking-cancelled", bookingCancelledDTO);
     }
