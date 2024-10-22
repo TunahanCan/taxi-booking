@@ -1,4 +1,4 @@
-package com.taxibooking.bookingservice.model;
+package com.taxibooking.driverservice.model;
 
 import java.util.Date;
 
@@ -11,5 +11,4 @@ public record DriverStageDTO(
         String pickupLocation,
         String dropoffLocation,
         Date driverDate
-) {
-}
+) {}

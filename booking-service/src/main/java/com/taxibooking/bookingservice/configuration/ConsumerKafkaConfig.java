@@ -49,7 +49,7 @@ public class ConsumerKafkaConfig {
         return new DefaultKafkaConsumerFactory<>(
                 configProps,
                 new StringDeserializer(),
-                new JsonDeserializer<>(dtoClass)
+                new JsonDeserializer<>(dtoClass,false)
         );
     }
 

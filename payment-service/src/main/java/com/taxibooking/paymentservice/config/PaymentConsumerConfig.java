@@ -50,7 +50,7 @@ public class PaymentConsumerConfig {
         return new DefaultKafkaConsumerFactory<>(
                 configProps,
                 new StringDeserializer(),
-                new JsonDeserializer<>(dtoClass)
+                new JsonDeserializer<>(dtoClass,false)
         );
     }
 

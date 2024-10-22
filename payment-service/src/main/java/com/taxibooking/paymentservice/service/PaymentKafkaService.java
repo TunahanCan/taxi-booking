@@ -25,7 +25,7 @@ public class PaymentKafkaService {
         }
         return new PaymentStageDTO(
                 entity.getBookingId(),
-                entity.getPaymentId(),
+                entity.getPaymentTransactionId(),
                 entity.isPaymentCompleted(),
                 entity.getPaymentStatus(),
                 entity.getFailureReason()
@@ -45,6 +45,7 @@ public class PaymentKafkaService {
             entity.setPaymentDate(new Date());
             entity.setPaymentStatus("success");
             entity.setPaymentCompleted(true);
+            entity.setFailureReason("success");
         } catch (IllegalArgumentException ie) {
             log.error(ie.getMessage());
             entity.setPaymentStatus("failed");

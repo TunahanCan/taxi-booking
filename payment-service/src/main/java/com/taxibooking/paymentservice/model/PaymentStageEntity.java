@@ -1,8 +1,6 @@
 package com.taxibooking.paymentservice.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.Data;
 import java.util.Date;
 
@@ -11,7 +9,8 @@ import java.util.Date;
 public class PaymentStageEntity {
     @Id
     @Column(name = "payment_id", nullable = false, unique = true)
-    private String paymentId;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private long paymentId;
     @Column(name = "booking_id", nullable = false)
     private String bookingId;
     @Column(name = "payment_completed", nullable = false)
@@ -22,6 +21,6 @@ public class PaymentStageEntity {
     private String failureReason;
     @Column(name = "payment_transaction_id" , nullable = false)
     private String paymentTransactionId;
-    @Column
+    @Column(name = "payment_date")
     private Date paymentDate;
 }

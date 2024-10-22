@@ -64,7 +64,7 @@ public class BookingOrchestrationProducerService {
         Message<DriverTriggerDTO> message = MessageBuilder
                 .withPayload(driverTriggerDTO)
                 .setHeader(KafkaHeaders.TOPIC, driverTriggerTopic)
-                .setHeader("driver-message", headerMessage)
+                .setHeader("driver-trigger-message", headerMessage)
                 .build();
         driverTriggerKafkaTemplate.send(message);
     }

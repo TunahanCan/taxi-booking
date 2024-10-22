@@ -5,10 +5,7 @@ import com.taxibooking.bookingservice.model.*;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
-
-import java.util.Map;
 import java.util.Random;
-import java.util.stream.Collectors;
 
 @Service
 public class BookingOrchestratorService {
@@ -28,22 +25,6 @@ public class BookingOrchestratorService {
         return paymentEnums[random.nextInt(paymentEnums.length)];
     }
 
-
-    public Map<String, Object> getBookingDetails(String bookingId) {
-        Map<Object, Object> bookingDetails = redisTemplate.opsForHash().entries(bookingId);
-        return bookingDetails.entrySet()
-                .stream()
-                .collect(Collectors.toMap(e -> (String) e.getKey(), Map.Entry::getValue));
-    }
-
-    public void updatePaymentDetails(String bookingId, PaymentStageDTO PaymentStageDTO) {
-        redisTemplate.opsForHash().put(bookingId, "payment", PaymentStageDTO);
-    }
-
-    public void removeBookingDetails(String bookingId) {
-        redisTemplate.delete(bookingId);
-    }
-
     /**
      * @param bookingRequest
      * @implNote this listener process the reletad booking request topic
@@ -59,12 +40,20 @@ public class BookingOrchestratorService {
                 getRandomPaymentEnum().name()
         );
         redisTemplate.opsForHash().put(bookingRequest.bookingId(), "booking-request", bookingRequest);
-        bookingOrchestrationProducerService.sendPaymentTrigger(paymentTriggerDTO,"payment-events");
+        bookingOrchestrationProducerService.sendPaymentTrigger(paymentTriggerDTO, "payment-events");
     }
 
+    public BookingRequestDTO getBookingRequestById(String bookingId) {
+        Object bookingRequest = redisTemplate.opsForHash().get(bookingId, "booking-request");
+        if (bookingRequest instanceof BookingRequestDTO) {
+            return (BookingRequestDTO) bookingRequest;
+        }
+        return null;
+    }
 
     /**
      * will be implemented rollback scenario
+     *
      * @param bookingCancelledDTO
      */
     @KafkaListener(topics = "${booking.cancelled.topic}", groupId = "${spring.kafka.consumer.group-id}",
@@ -76,32 +65,38 @@ public class BookingOrchestratorService {
 
     @KafkaListener(topics = "${payment.stage.topic}", groupId = "${spring.kafka.consumer.group-id}",
             containerFactory = "paymentKafkaListenerContainerFactory")
-    public void handlePaymentEvent(PaymentStageDTO PaymentStageDTO) {
-        if (PaymentStageDTO.paymentCompleted()) {
+    public void handlePaymentEvent(PaymentStageDTO paymentStageDTO) {
+        if (paymentStageDTO.paymentCompleted()) {
+            BookingRequestDTO requestDTO = getBookingRequestById(paymentStageDTO.bookingId());
+            if (requestDTO == null) {
+                rollbackTransaction(paymentStageDTO.bookingId(), "booking-can-not-be-found");
+                throw new IllegalStateException("booking-can-not-be-found");
+            }
             DriverTriggerDTO driverTriggerDTO = new DriverTriggerDTO(
-                    PaymentStageDTO.bookingId(),
-                    "driver123",
-                    "John Doe"
+                    paymentStageDTO.bookingId(),
+                    requestDTO.customerName(),
+                    requestDTO.pickupLocation(),
+                    requestDTO.destination()
             );
-            redisTemplate.opsForHash().put(PaymentStageDTO.bookingId(), "payment-success", PaymentStageDTO);
-            bookingOrchestrationProducerService.sendDriverTrigger(driverTriggerDTO,"driver-events");
+            redisTemplate.opsForHash().put(paymentStageDTO.bookingId(), "payment-success", paymentStageDTO);
+            bookingOrchestrationProducerService.sendDriverTrigger(driverTriggerDTO, "driver-events");
         } else {
             BookingCancelledDTO bookingCancelledDTO =
-                    new BookingCancelledDTO(PaymentStageDTO.bookingId(),
+                    new BookingCancelledDTO(paymentStageDTO.bookingId(),
                             "test-name", false);
-            bookingOrchestrationProducerService.sendBookingCancelled(bookingCancelledDTO,"booking-cancelled");
+            bookingOrchestrationProducerService.sendBookingCancelled(bookingCancelledDTO, "booking-cancelled");
         }
     }
 
     @KafkaListener(topics = "driver-events", groupId = "${spring.kafka.consumer.group-id}",
             containerFactory = "driverKafkaListenerContainerFactory")
-    public void handleDriverEvent(DriverStageDTO driverTriggerDTO) {
-        if (driverTriggerDTO.driverAssigned()) {
-            System.out.println("Booking completed successfully for: " + driverTriggerDTO.bookingId());
-            redisTemplate.opsForHash().put(driverTriggerDTO.bookingId(), "driver-assigned", driverTriggerDTO);
+    public void handleDriverEvent(DriverStageDTO driverStageDTO) {
+        if (driverStageDTO.driverAssigned()) {
+            System.out.println("Booking completed successfully for: " + driverStageDTO.bookingId());
+            redisTemplate.opsForHash().put(driverStageDTO.bookingId(), "driver-assigned", driverStageDTO);
         } else {
-            rollbackTransaction(driverTriggerDTO.bookingId(),"driver-is-not-assigned");
-            System.out.println("Driver assignment failed for booking: " + driverTriggerDTO.bookingId());
+            rollbackTransaction(driverStageDTO.bookingId(), "driver-is-not-assigned");
+            System.out.println("Driver assignment failed for booking: " + driverStageDTO.bookingId());
         }
     }
 

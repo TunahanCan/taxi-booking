@@ -13,7 +13,7 @@ public class RedisConfiguration {
 
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
-        return new JedisConnectionFactory(); // Redis bağlantısını oluştur
+        return new JedisConnectionFactory();
     }
 
     @Bean
