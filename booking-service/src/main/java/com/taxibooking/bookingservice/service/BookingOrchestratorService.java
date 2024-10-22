@@ -88,7 +88,7 @@ public class BookingOrchestratorService {
         }
     }
 
-    @KafkaListener(topics = "driver-events", groupId = "${spring.kafka.consumer.group-id}",
+    @KafkaListener(topics = "${driver.stage.topic}", groupId = "${spring.kafka.consumer.group-id}",
             containerFactory = "driverKafkaListenerContainerFactory")
     public void handleDriverEvent(DriverStageDTO driverStageDTO) {
         if (driverStageDTO.driverAssigned()) {
