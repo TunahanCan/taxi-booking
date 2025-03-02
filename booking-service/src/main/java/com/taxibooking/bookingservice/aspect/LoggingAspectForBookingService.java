@@ -31,4 +31,8 @@ public class LoggingAspectForBookingService {
         String methodName = joinPoint.getSignature().getName();
         log.info("Method executed: {} returned: {}", methodName, result);
     }
+
+    public void testCOde(){
+        System.out.println("testcode ");
+    }
 }

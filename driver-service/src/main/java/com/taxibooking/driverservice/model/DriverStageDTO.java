@@ -10,5 +10,6 @@ public record DriverStageDTO(
         String customerName,
         String pickupLocation,
         String dropoffLocation,
-        Date driverDate
+        Date driverDate,
+        DriverStageStatus driverStageStatus
 ) {}

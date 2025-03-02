@@ -2,24 +2,21 @@ package com.taxibooking.bookingservice.service;
 
 import com.taxibooking.bookingservice.enums.PaymentEnum;
 import com.taxibooking.bookingservice.model.*;
-import org.springframework.data.redis.core.RedisTemplate;
+
+import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import java.util.Random;
 
+
 @Service
+@RequiredArgsConstructor
 public class BookingOrchestratorService {
 
     private final BookingOrchestrationProducerService bookingOrchestrationProducerService;
-    private final RedisTemplate<String, Object> redisTemplate;
     private final Random random = new Random();
 
-    public BookingOrchestratorService(BookingOrchestrationProducerService bookingOrchestrationProducerService,
-                                      RedisTemplate<String, Object> redisTemplate) {
-        this.bookingOrchestrationProducerService = bookingOrchestrationProducerService;
-        this.redisTemplate = redisTemplate;
-    }
-
+   
     private PaymentEnum getRandomPaymentEnum() {
         PaymentEnum[] paymentEnums = PaymentEnum.values();
         return paymentEnums[random.nextInt(paymentEnums.length)];
@@ -39,7 +36,6 @@ public class BookingOrchestratorService {
                 bookingRequest.amount(),
                 getRandomPaymentEnum().name()
         );
-        redisTemplate.opsForHash().put(bookingRequest.bookingId(), "booking-request", bookingRequest);
         bookingOrchestrationProducerService.sendPaymentTrigger(paymentTriggerDTO, "payment-events");
     }
 
