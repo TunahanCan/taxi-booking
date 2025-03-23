@@ -31,6 +31,7 @@
         <module>booking-service</module>
         <module>payment-service</module>
         <module>driver-service</module>
+        <module>cache-server</module>
     </modules>
 
     <dependencies>
