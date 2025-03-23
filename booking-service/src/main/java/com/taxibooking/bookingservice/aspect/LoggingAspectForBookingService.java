@@ -13,6 +13,7 @@ import java.util.Arrays;
 @Component
 @Slf4j
 public class LoggingAspectForBookingService {
+
     @PostConstruct
     public void init() {
         System.out.println("LoggingAspectForOrchestrator");
@@ -32,7 +33,7 @@ public class LoggingAspectForBookingService {
         log.info("Method executed: {} returned: {}", methodName, result);
     }
 
-    public void testCOde(){
+     public void testCOde(){
         System.out.println("testcode ");
     }
 }

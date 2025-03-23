@@ -1,3 +1,5 @@
+package com.taxibooking.bookingservice.exception;
+
 public class MessagePublishException extends RuntimeException {
     private final String topic;
     private final String messageKey;

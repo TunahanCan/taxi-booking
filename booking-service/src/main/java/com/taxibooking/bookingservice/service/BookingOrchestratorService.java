@@ -15,6 +15,7 @@ public class BookingOrchestratorService {
 
     private final BookingOrchestrationProducerService bookingOrchestrationProducerService;
     private final Random random = new Random();
+    private final RedisService redisService;
 
    
     private PaymentEnum getRandomPaymentEnum() {
@@ -24,7 +25,7 @@ public class BookingOrchestratorService {
 
     /**
      * @param bookingRequest
-     * @implNote this listener process the reletad booking request topic
+     * @implNote this listener process the related booking request topic
      */
     @KafkaListener(topics = "${booking.request.topic}", groupId = "${spring.kafka.consumer.group-id}",
             containerFactory = "bookingRequestKafkaListenerContainerFactory")
@@ -40,7 +41,7 @@ public class BookingOrchestratorService {
     }
 
     public BookingRequestDTO getBookingRequestById(String bookingId) {
-        Object bookingRequest = redisTemplate.opsForHash().get(bookingId, "booking-request");
+        Object bookingRequest = redisService.get(bookingId, "booking-request");
         if (bookingRequest instanceof BookingRequestDTO) {
             return (BookingRequestDTO) bookingRequest;
         }
@@ -55,7 +56,7 @@ public class BookingOrchestratorService {
     @KafkaListener(topics = "${booking.cancelled.topic}", groupId = "${spring.kafka.consumer.group-id}",
             containerFactory = "bookingCancelledKafkaListenerContainerFactory")
     public void handleBookingCancelledEvent(BookingCancelledDTO bookingCancelledDTO) {
-        redisTemplate.opsForHash().put(bookingCancelledDTO.bookingId(), "booking-cancelled", bookingCancelledDTO);
+        redisService.save(bookingCancelledDTO.bookingId(), "booking-cancelled", bookingCancelledDTO);
     }
 
 
@@ -74,7 +75,7 @@ public class BookingOrchestratorService {
                     requestDTO.pickupLocation(),
                     requestDTO.destination()
             );
-            redisTemplate.opsForHash().put(paymentStageDTO.bookingId(), "payment-success", paymentStageDTO);
+            redisService.save(paymentStageDTO.bookingId(), "payment-success", paymentStageDTO);
             bookingOrchestrationProducerService.sendDriverTrigger(driverTriggerDTO, "driver-events");
         } else {
             BookingCancelledDTO bookingCancelledDTO =
@@ -89,7 +90,7 @@ public class BookingOrchestratorService {
     public void handleDriverEvent(DriverStageDTO driverStageDTO) {
         if (driverStageDTO.driverAssigned()) {
             System.out.println("Booking completed successfully for: " + driverStageDTO.bookingId());
-            redisTemplate.opsForHash().put(driverStageDTO.bookingId(), "driver-assigned", driverStageDTO);
+            redisService.save(driverStageDTO.bookingId(), "driver-assigned", driverStageDTO);
         } else {
             rollbackTransaction(driverStageDTO.bookingId(), "driver-is-not-assigned");
             System.out.println("Driver assignment failed for booking: " + driverStageDTO.bookingId());
@@ -98,14 +99,14 @@ public class BookingOrchestratorService {
 
     private void rollbackTransaction(String bookingId, String reason) {
         System.out.println("Rolling back transaction for booking: " + bookingId + " due to: " + reason);
-        BookingRequestDTO bookingRequest = (BookingRequestDTO) redisTemplate.opsForList().leftPop(bookingId);
+        BookingRequestDTO bookingRequest = (BookingRequestDTO) redisService.leftPop(bookingId);
         if (bookingRequest != null) {
             BookingCancelledDTO bookingCancelledDTO = new BookingCancelledDTO(
                     bookingId,
                     bookingRequest.customerName(),
                     false
             );
-            redisTemplate.delete(bookingId);
+            redisService.delete(bookingId);
         }
     }
 }
