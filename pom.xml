@@ -19,7 +19,7 @@
 
     <developers>
         <developer>
-            <name>tunahan</name>
+            <name>tunahancan</name>
         </developer>
     </developers>
 
@@ -32,6 +32,7 @@
         <module>payment-service</module>
         <module>driver-service</module>
         <module>cache-server</module>
+        <module>event-streamer</module>
     </modules>
 
     <dependencies>

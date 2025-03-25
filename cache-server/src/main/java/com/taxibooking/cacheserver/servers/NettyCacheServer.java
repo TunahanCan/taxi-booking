@@ -3,7 +3,10 @@ package com.taxibooking.cacheserver.servers;
 
 import com.taxibooking.cacheserver.service.CacheService;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.*;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -12,6 +15,7 @@ import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.TimeUnit;
@@ -20,7 +24,8 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class NettyCacheServer {
 
-    private final int port = 11211;
+    @Value("${application.server.port}")
+    private int port;
 
     private final CacheService cacheService;
 
@@ -31,7 +36,8 @@ public class NettyCacheServer {
         new Thread(this::runServer).start();
     }
 
-    private void runServer() {
+    private void runServer()
+    {
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         try {
@@ -48,7 +54,6 @@ public class NettyCacheServer {
                             pipeline.addLast(cacheServerHandler);
                         }
                     });
-
             ChannelFuture future = bootstrap.bind(port).sync();
             System.out.println("Netty Cache Server started on port " + port);
             workerGroup.scheduleAtFixedRate(cacheService::removeExpiredEntries, 10, 10, TimeUnit.SECONDS);

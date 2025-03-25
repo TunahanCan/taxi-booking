@@ -10,6 +10,7 @@
         <module name="cache-server" />
         <module name="payment-service" />
         <module name="driver-service" />
+        <module name="event-streamer" />
         <module name="booking-service" />
       </profile>
     </annotationProcessing>
@@ -19,6 +20,7 @@
       <module name="booking-service" options="-parameters" />
       <module name="cache-server" options="-parameters" />
       <module name="driver-service" options="-parameters" />
+      <module name="event-streamer" options="-parameters" />
       <module name="payment-service" options="-parameters" />
       <module name="taxi-booking" options="" />
     </option>

@@ -3,6 +3,7 @@ package com.taxibooking.cacheserver.servers;
 import com.taxibooking.cacheserver.service.CacheService;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -11,7 +12,9 @@ import java.util.Arrays;
 public class CacheServerHandler extends SimpleChannelInboundHandler<String> {
 
     private final CacheService cacheService;
-    private final long MAX_TTL_SECONDS = 86400;
+
+    @Value("${application.cache.server.ttl.time}")
+    private long MAX_TTL_SECONDS ;
 
     public CacheServerHandler(CacheService cacheService) {
         this.cacheService = cacheService;

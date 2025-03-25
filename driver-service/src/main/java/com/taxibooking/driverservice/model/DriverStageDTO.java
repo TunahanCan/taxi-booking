@@ -11,5 +11,5 @@ public record DriverStageDTO(
         String pickupLocation,
         String dropoffLocation,
         Date driverDate,
-        DriverStageStatus driverStageStatus
+        CustomStageStatus driverStageStatus
 ) {}
